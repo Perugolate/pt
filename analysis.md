@@ -14,6 +14,7 @@ library(GSEABase)
 library(magrittr)
 library(dplyr)
 library(tidyr)
+library(RSvgDevice)
 library(cowplot)
 df1 <- read.table("forGOstats.tsv", header=FALSE, sep="\t")
 colnames(df1) <- c("frame.go_id","frame.EVIDENCE","frame.gene_id")
@@ -42,11 +43,29 @@ write.table(goTest(uprg21d), file="cu21d.tsv", sep="\t", quote=FALSE, row.names=
 resUp <- merge(goTest(uprg07d), goTest(uprg21d), by=c("GOBPID", "Term"), suffixes=c("_d7", "_d21"))
 resUp$OddsRatio_m30 <- rep(0, nrow(resUp))
 resUpL <- select(resUp, Term, OddsRatio_d7, OddsRatio_d21, OddsRatio_m30) %>% filter(OddsRatio_d7!=Inf) %>% gather(tp, odds, -Term)
+resUpL <- separate(resUpL, tp, into=c("or", "tp"))
+resUpL$tp <- gsub("m30", "30 m", resUpL$tp) %>% gsub("d7", "7 d", .) %>% gsub("d21", "21 d", .) %>% factor(levels=c("30 m", "7 d", "21 d"))
 # combine output for downregulated
 resDown <- merge(goTest(down07d), goTest(down21d), by=c("GOBPID", "Term"), suffixes=c("_d7", "_d21"))
 resDown$OddsRatio_m30 <- rep(0, nrow(resDown))
 resDownL <- select(resDown, Term, OddsRatio_d7, OddsRatio_d21, OddsRatio_m30) %>% filter(OddsRatio_d7!=Inf) %>% gather(tp, odds, -Term)
+resDownL <- separate(resDownL, tp, into=c("or", "tp"))
+resDownL$tp <- gsub("m30", "30 m", resDownL$tp) %>% gsub("d7", "7 d", .) %>% gsub("d21", "21 d", .) %>% factor(levels=c("30 m", "7 d", "21 d"))
 # the goTest function calls are quite slow so should keep their output rather than repeatedly call them
 # plot some odds ratios
-
+ggplot(resUpL, aes(x=Term, y=odds, fill=tp)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio")
+ggplot(resDownL, aes(x=Term, y=odds, fill=tp)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio")
+# munge and plot specific terms
+plotResUpL <- filter(resUpL, Term=="defense response to bacterium" | Term=="negative regulation of hemocyte
+differentiation")
+plotResUpL$response <- rep("increased expression", nrow(plotResUpL))
+plotResDnL <- filter(resDownL, Term=="cellular amino acid metabolic process" | Term=="fatty acid metabolic p
+rocess")
+plotResDnL$response <- rep("decreased expression", nrow(plotResDnL))
+plotResL <- rbind(plotResUpL, plotResDnL)
+plotResL$response <- factor(plotResL$response, levels=c("increased expression", "decreased expression"))
+plotResL <- rename(plotResL, timepoint=tp)
+# plot with facet
+ggplot(plotResL, aes(x=Term, y=odds, fill=timepoint)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio") + facet_grid(.~response, scales="free_x") + scale_y_log10(limits=c(1,100)) + xlab("GO term")
 ```
+
