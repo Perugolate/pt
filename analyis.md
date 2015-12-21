@@ -1,5 +1,5 @@
 
-## GO enrichment for downregulated genes at 30 min, 7 days, and 21 days after challenge
+## GO enrichment for downregulated proteins at 30 min, 7 days, and 21 days after challenge
 
 ```sh
 perl $TRINOTATE_HOME/util/extract_GO_assignments_from_Trinotate_xls.pl --Trinotate_xls trinotation.tsv -G --include_ancestral_terms > go_annotations.txt
