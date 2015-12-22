@@ -25,6 +25,7 @@ dds <- DESeq(dds, parallel=TRUE, fitType='local')
 Contrast each timepoint with control:
 ```R
 geneMap <- read.csv("gene_amp.csv")
+amps <- geneMap$gene
 res6h <- results(dds, contrast=c("tp","6h","con"), alpha=0.05) %>% subset(rownames(.) %in% amps) %>% data.frame(., c(rep(0.25, nrow(.))), rownames(.))
 colnames(res6h) <- c(colnames(res6h)[1:6], "tp", "gene")
 res6h <- merge(res6h, geneMap, by="gene")
