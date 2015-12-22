@@ -1,13 +1,10 @@
 ## Plot gene expression for each of the AMPs
 
-Load dependencies:
 ```R
-library(cowplot, quietly=TRUE)
-library(DESeq2, quietly=TRUE)
-library(plyr, quietly=TRUE)
-library(magrittr, quietly=TRUE)
-library(RSvgDevice, quietly=TRUE)
-library(tidyr, quietly=TRUE)
+library(cowplot)
+library(DESeq2)
+library(magrittr)
+library(tidyr)
 ```
 
 ```R
@@ -49,7 +46,9 @@ l2l$realmax <- 2^(l2l$log2FoldChange+l2l$lfcSE)
 
 Plot:
 ```R
-ggplot(data=l2l, aes(x=tp, y=real, group=amp, colour=amp)) + geom_line(size=1) + geom_errorbar(size=1, aes(ymin=realmin, ymax=realmax, width=.1)) + geom_point(shape=22, size=3, fill="white") + xlab("Days post immune challenge") + ylab("Gene expression (fold induction relative to control)") + theme(legend.position=c(1,0), legend.justification=c(1,0)) + scale_x_continuous(breaks=c(0, 1, 2, 3, 4, 5, 6, 7)) + scale_y_log10() + facet_grid(. ~ rumsfeld)
+svg("expression_plot.svg", width=14, height=7)
+ggplot(data=l2l, aes(x=tp, y=real, group=amp, colour=amp)) + geom_line(size=1) + geom_errorbar(size=1, aes(ymin=realmin, ymax=realmax, width=.1)) + geom_point(shape=22, size=3, fill="white") + xlab("Days post immune challenge") + ylab("Gene expression (fold induction relative to control)") + theme(legend.justification=c(1,0)) + scale_x_continuous(breaks=c(0, 1, 2, 3, 4, 5, 6, 7)) + scale_y_log10() + facet_grid(. ~ rumsfeld)
+dev.off()
 ```
 
 ## GO enrichment for downregulated proteins at 30 min, 7 days, and 21 days after challenge
@@ -67,7 +66,6 @@ library(GSEABase)
 library(magrittr)
 library(dplyr)
 library(tidyr)
-library(RSvgDevice)
 library(cowplot)
 df1 <- read.table("forGOstats.tsv", header=FALSE, sep="\t")
 colnames(df1) <- c("frame.go_id","frame.EVIDENCE","frame.gene_id")
