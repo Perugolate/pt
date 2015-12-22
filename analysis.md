@@ -107,16 +107,16 @@ resDownL$tp <- gsub("m30", "30 m", resDownL$tp) %>% gsub("d7", "7 d", .) %>% gsu
 ggplot(resUpL, aes(x=Term, y=odds, fill=tp)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio")
 ggplot(resDownL, aes(x=Term, y=odds, fill=tp)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio")
 # munge and plot specific terms
-plotResUpL <- filter(resUpL, Term=="defense response to bacterium" | Term=="negative regulation of hemocyte
-differentiation")
+plotResUpL <- filter(resUpL, Term=="defense response to bacterium" | Term=="negative regulation of hemocyte differentiation")
 plotResUpL$response <- rep("increased expression", nrow(plotResUpL))
-plotResDnL <- filter(resDownL, Term=="cellular amino acid metabolic process" | Term=="fatty acid metabolic p
-rocess")
+plotResDnL <- filter(resDownL, Term=="cellular amino acid metabolic process" | Term=="fatty acid metabolic process")
 plotResDnL$response <- rep("decreased expression", nrow(plotResDnL))
 plotResL <- rbind(plotResUpL, plotResDnL)
 plotResL$response <- factor(plotResL$response, levels=c("increased expression", "decreased expression"))
 plotResL <- rename(plotResL, timepoint=tp)
 # plot with facet
+svg("go_plot.svg")
 ggplot(plotResL, aes(x=Term, y=odds, fill=timepoint)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio") + facet_grid(.~response, scales="free_x") + scale_y_log10(limits=c(1,100)) + xlab("GO term")
+dev.off()
 ```
 
