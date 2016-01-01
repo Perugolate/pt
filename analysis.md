@@ -15,7 +15,8 @@ colData <- data.frame(colnames(countData), (c("con","6h","1d","3d","5d","7d") %>
                                               rep(.,2)))
 colnames(colData) <- c("", "tp")
 colData$tp <- relevel(colData$tp, ref="con")
-dds <- DESeqDataSetFromMatrix(countData = countData, colData = colData, design = ~ tp)
+dds <- DESeqDataSetFromMatrix(countData = countData, colData = colData, 
+                              design = ~ tp)
 dds <- DESeq(dds, parallel=TRUE, fitType='local')
 ```
 
@@ -23,19 +24,29 @@ Contrast each timepoint with control:
 ```R
 geneMap <- read.csv("gene_amp.csv")
 amps <- geneMap$gene
-res6h <- results(dds, contrast=c("tp","6h","con"), alpha=0.05) %>% subset(rownames(.) %in% amps) %>% data.frame(., c(rep(0.25, nrow(.))), rownames(.))
+res6h <- results(dds, contrast=c("tp","6h","con"), alpha=0.05) %>% 
+  subset(rownames(.) %in% amps) %>% 
+  data.frame(., c(rep(0.25, nrow(.))), rownames(.))
 colnames(res6h) <- c(colnames(res6h)[1:6], "tp", "gene")
 res6h <- merge(res6h, geneMap, by="gene")
-res1d <- results(dds, contrast=c("tp","1d","con"), alpha=0.05) %>% subset(rownames(.) %in% amps) %>% data.frame(., c(rep(1, nrow(.))), rownames(.))
+res1d <- results(dds, contrast=c("tp","1d","con"), alpha=0.05) %>% 
+  subset(rownames(.) %in% amps) %>% 
+  data.frame(., c(rep(1, nrow(.))), rownames(.))
 colnames(res1d) <- c(colnames(res1d)[1:6], "tp", "gene")
 res1d <- merge(res1d, geneMap, by="gene")
-res3d <- results(dds, contrast=c("tp","3d","con"), alpha=0.05) %>% subset(rownames(.) %in% amps) %>% data.frame(., c(rep(3, nrow(.))), rownames(.))
+res3d <- results(dds, contrast=c("tp","3d","con"), alpha=0.05) %>% 
+  subset(rownames(.) %in% amps) %>% 
+  data.frame(., c(rep(3, nrow(.))), rownames(.))
 colnames(res3d) <- c(colnames(res3d)[1:6], "tp", "gene")
 res3d <- merge(res3d, geneMap, by="gene")
-res5d <- results(dds, contrast=c("tp","5d","con"), alpha=0.05) %>% subset(rownames(.) %in% amps) %>% data.frame(., c(rep(5, nrow(.))), rownames(.))
+res5d <- results(dds, contrast=c("tp","5d","con"), alpha=0.05) %>% 
+  subset(rownames(.) %in% amps) %>% 
+  data.frame(., c(rep(5, nrow(.))), rownames(.))
 colnames(res5d) <- c(colnames(res5d)[1:6], "tp", "gene")
 res5d <- merge(res5d, geneMap, by="gene")
-res7d <- results(dds, contrast=c("tp","7d","con"), alpha=0.05) %>% subset(rownames(.) %in% amps) %>% data.frame(., c(rep(7, nrow(.))), rownames(.))
+res7d <- results(dds, contrast=c("tp","7d","con"), alpha=0.05) %>% 
+  subset(rownames(.) %in% amps) %>% 
+  data.frame(., c(rep(7, nrow(.))), rownames(.))
 colnames(res7d) <- c(colnames(res7d)[1:6], "tp", "gene")
 res7d <- merge(res7d, geneMap, by="gene")
 l2l <- rbind(res6h, res1d, res3d, res5d, res7d)
@@ -47,7 +58,13 @@ l2l$realmax <- 2^(l2l$log2FoldChange+l2l$lfcSE)
 Plot:
 ```R
 svg("expression_plot.svg", width=14, height=7)
-ggplot(data=l2l, aes(x=tp, y=real, group=amp, colour=amp)) + geom_line(size=1) + geom_errorbar(size=1, aes(ymin=realmin, ymax=realmax, width=.1)) + geom_point(shape=22, size=3, fill="white") + xlab("Days post immune challenge") + ylab("Gene expression (fold induction relative to control)") + theme(legend.justification=c(1,0)) + scale_x_continuous(breaks=c(0, 1, 2, 3, 4, 5, 6, 7)) + scale_y_log10() + facet_grid(. ~ rumsfeld)
+ggplot(data=l2l, aes(x=tp, y=real, group=amp, colour=amp)) + geom_line(size=1) +
+  geom_errorbar(size=1, aes(ymin=realmin, ymax=realmax, width=.1)) + 
+  geom_point(shape=22, size=3, fill="white") + xlab("Days post immune challenge") + 
+  ylab("Gene expression (fold induction relative to control)") + 
+  theme(legend.justification=c(1,0)) + 
+  scale_x_continuous(breaks=c(0, 1, 2, 3, 4, 5, 6, 7)) + scale_y_log10() + 
+  facet_grid(. ~ rumsfeld)
 dev.off()
 ```
 
@@ -81,42 +98,64 @@ uprg07d <- readLines("up07d.txt")
 uprg21d <- readLines("up21d.txt")
 # 
 goTest <- function(x) {
-    result <- summary(hyperGTest(GSEAGOHyperGParams(name="up", geneSetCollection=gsc, geneIds=x, universeGeneIds=universe, ontology="BP", pvalueCutoff=0.05, conditional=TRUE, testDirection="over")))
+    result <- summary(hyperGTest(GSEAGOHyperGParams(name="up", 
+                      geneSetCollection=gsc, geneIds=x, universeGeneIds=universe, 
+		      ontology="BP", pvalueCutoff=0.05, conditional=TRUE, 
+		      testDirection="over")))
     return(result)
 }
 # write output tables
-write.table(goTest(down30m), file="cd30m.tsv", sep="\t", quote=FALSE, row.names=FALSE)
-write.table(goTest(down07d), file="cd07d.tsv", sep="\t", quote=FALSE, row.names=FALSE)
-write.table(goTest(down21d), file="cd21d.tsv", sep="\t", quote=FALSE, row.names=FALSE)
-write.table(goTest(uprg07d), file="cu07d.tsv", sep="\t", quote=FALSE, row.names=FALSE)
-write.table(goTest(uprg21d), file="cu21d.tsv", sep="\t", quote=FALSE, row.names=FALSE)
+write.table(goTest(down30m), file="cd30m.tsv", sep="\t", quote=FALSE, 
+            row.names=FALSE)
+write.table(goTest(down07d), file="cd07d.tsv", sep="\t", quote=FALSE, 
+            row.names=FALSE)
+write.table(goTest(down21d), file="cd21d.tsv", sep="\t", quote=FALSE, 
+            row.names=FALSE)
+write.table(goTest(uprg07d), file="cu07d.tsv", sep="\t", quote=FALSE, 
+            row.names=FALSE)
+write.table(goTest(uprg21d), file="cu21d.tsv", sep="\t", quote=FALSE, 
+            row.names=FALSE)
 # combine output for upregulated
-resUp <- merge(goTest(uprg07d), goTest(uprg21d), by=c("GOBPID", "Term"), suffixes=c("_d7", "_d21"))
+resUp <- merge(goTest(uprg07d), goTest(uprg21d), by=c("GOBPID", "Term"), 
+               suffixes=c("_d7", "_d21"))
 resUp$OddsRatio_m30 <- rep(0, nrow(resUp))
-resUpL <- select(resUp, Term, OddsRatio_d7, OddsRatio_d21, OddsRatio_m30) %>% filter(OddsRatio_d7!=Inf) %>% gather(tp, odds, -Term)
+resUpL <- select(resUp, Term, OddsRatio_d7, OddsRatio_d21, OddsRatio_m30) %>% 
+  filter(OddsRatio_d7!=Inf) %>% gather(tp, odds, -Term)
 resUpL <- separate(resUpL, tp, into=c("or", "tp"))
-resUpL$tp <- gsub("m30", "30 m", resUpL$tp) %>% gsub("d7", "7 d", .) %>% gsub("d21", "21 d", .) %>% factor(levels=c("30 m", "7 d", "21 d"))
+resUpL$tp <- gsub("m30", "30 m", resUpL$tp) %>% gsub("d7", "7 d", .) %>% 
+  gsub("d21", "21 d", .) %>% factor(levels=c("30 m", "7 d", "21 d"))
 # combine output for downregulated
-resDown <- merge(goTest(down07d), goTest(down21d), by=c("GOBPID", "Term"), suffixes=c("_d7", "_d21"))
+resDown <- merge(goTest(down07d), goTest(down21d), by=c("GOBPID", "Term"), 
+                 suffixes=c("_d7", "_d21"))
 resDown$OddsRatio_m30 <- rep(0, nrow(resDown))
-resDownL <- select(resDown, Term, OddsRatio_d7, OddsRatio_d21, OddsRatio_m30) %>% filter(OddsRatio_d7!=Inf) %>% gather(tp, odds, -Term)
+resDownL <- select(resDown, Term, OddsRatio_d7, OddsRatio_d21, OddsRatio_m30) %>% 
+  filter(OddsRatio_d7!=Inf) %>% gather(tp, odds, -Term)
 resDownL <- separate(resDownL, tp, into=c("or", "tp"))
-resDownL$tp <- gsub("m30", "30 m", resDownL$tp) %>% gsub("d7", "7 d", .) %>% gsub("d21", "21 d", .) %>% factor(levels=c("30 m", "7 d", "21 d"))
+resDownL$tp <- gsub("m30", "30 m", resDownL$tp) %>% gsub("d7", "7 d", .) %>% 
+  gsub("d21", "21 d", .) %>% factor(levels=c("30 m", "7 d", "21 d"))
 # the goTest function calls are quite slow so should keep their output rather than repeatedly call them
 # plot some odds ratios
-ggplot(resUpL, aes(x=Term, y=odds, fill=tp)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio")
-ggplot(resDownL, aes(x=Term, y=odds, fill=tp)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio")
+ggplot(resUpL, aes(x=Term, y=odds, fill=tp)) + geom_bar(position="dodge", stat="identity") +
+       theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio")
+ggplot(resDownL, aes(x=Term, y=odds, fill=tp)) + 
+       geom_bar(position="dodge", stat="identity") + 
+       theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio")
 # munge and plot specific terms
-plotResUpL <- filter(resUpL, Term=="defense response to bacterium" | Term=="negative regulation of hemocyte differentiation")
+plotResUpL <- filter(resUpL, Term=="defense response to bacterium" | 
+                     Term=="negative regulation of hemocyte differentiation")
 plotResUpL$response <- rep("increased expression", nrow(plotResUpL))
-plotResDnL <- filter(resDownL, Term=="cellular amino acid metabolic process" | Term=="fatty acid metabolic process")
+plotResDnL <- filter(resDownL, Term=="cellular amino acid metabolic process" | 
+                     Term=="fatty acid metabolic process")
 plotResDnL$response <- rep("decreased expression", nrow(plotResDnL))
 plotResL <- rbind(plotResUpL, plotResDnL)
-plotResL$response <- factor(plotResL$response, levels=c("increased expression", "decreased expression"))
+plotResL$response <- factor(plotResL$response, levels=c("increased expression",
+                                                        "decreased expression"))
 plotResL <- rename(plotResL, timepoint=tp)
 # plot with facet
 svg("go_plot.svg")
-ggplot(plotResL, aes(x=Term, y=odds, fill=timepoint)) + geom_bar(position="dodge", stat="identity") + theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio") + facet_grid(.~response, scales="free_x") + scale_y_log10(limits=c(1,100)) + xlab("GO term")
+ggplot(plotResL, aes(x=Term, y=odds, fill=timepoint)) + geom_bar(position="dodge", stat="identity") +
+       theme(axis.text.x = element_text(angle = -45, hjust = 0)) + ylab("Odds Ratio") + 
+       facet_grid(.~response, scales="free_x") + scale_y_log10(limits=c(1,100)) + xlab("GO term")
 dev.off()
 ```
 
